@@ -1,0 +1,19 @@
+{
+    "compilerOptions": {
+        "strict": true,
+        "forceConsistentCasingInFileNames": true,
+        "lib": ["es2020", "dom"],
+        "types": ["jest"],
+        "jsx": "react",
+        "skipLibCheck": true,
+        "esModuleInterop": true,
+        "allowSyntheticDefaultImports": true,
+        "module": "esnext",
+        "moduleResolution": "node",
+        "resolveJsonModule": true,
+        "isolatedModules": true,
+        "baseUrl": "./src",
+        "sourceMap": true
+    },
+    "include": ["src"]
+}

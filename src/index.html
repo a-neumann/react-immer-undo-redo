@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title><%- define.npm_package_name %></title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="<%- define.npm_package_description %>">
+    <% if (define.NODE_ENV !== "production") { %>
+        <script>new EventSource("/esbuild").addEventListener("change", () => location.reload())</script>
+    <% } %>
+</head>
+<body>
+    <div id="root">
+    </div>
+</body>
+</html>

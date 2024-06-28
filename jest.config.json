@@ -1,0 +1,13 @@
+{
+    "preset": "ts-jest",
+    "rootDir": "src",
+    "testEnvironment": "jsdom",
+    "transform": {
+        "^.+\\.tsx?$": [
+            "ts-jest"
+        ]
+    },
+    "setupFilesAfterEnv": [
+        "<rootDir>/jest/setupAfterEnv.ts"
+    ]
+}
