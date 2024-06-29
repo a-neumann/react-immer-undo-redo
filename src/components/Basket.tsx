@@ -14,7 +14,7 @@ const BasketContainer = styled.div({
 
 const Basket: React.FC = () => {
 
-    const { productsInBasket } = useBasket();
+    const { productsInBasket, clear } = useBasket();
 
     return (
         <BasketContainer>
@@ -24,6 +24,9 @@ const Basket: React.FC = () => {
                     <li key={entry.product.id}>{entry.product.name} - {entry.product.price} ({entry.amount})</li>
                 ))}
             </ul>
+            <div>
+                <button onClick={clear}>Clear</button>
+            </div>
         </BasketContainer>
     );
 }

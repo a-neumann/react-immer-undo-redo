@@ -14,7 +14,7 @@ const initial: IProductContext = {
     //     { id: 4, name: "Product 4", price: 300, flags: { newProduct: false, featuredProduct: false} }
     // ],
     products: manyProducts,
-    basket: [[1, 2]]
+    basket: new Map([[1, 2]])
 };
 
 export interface IProduct {
@@ -29,7 +29,7 @@ export interface IProduct {
 
 export interface IProductContext {
     products: IProduct[];
-    basket: [id: number, amount: number][];
+    basket: Map<number, number>;
 }
 
-export const { useMutate, useStore, useStoreHistory, StoreProvider } = createStore(initial);
+export const { useMutate, useMutateAsync, useStore, useStoreHistory, StoreProvider } = createStore(initial);

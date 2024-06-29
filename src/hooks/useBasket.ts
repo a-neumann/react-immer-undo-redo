@@ -6,14 +6,15 @@ export default function useBasket() {
     const mutate = useMutate();
 
     return {
-        productsInBasket: basket.map(([id, amount]) => ({ product: products.find(p => p.id === id)!, amount })),
+        productsInBasket: Array.from(basket).map(([id, amount]) => ({ product: products.find(p => p.id === id)!, amount })),
         addToBasket: (id: number) => mutate(basket, b => {
-            const entry = b.find(([i]) => i === id);
+            const entry = b.get(id);
             if (entry) {
-                entry[1] += 1;
+                b.set(id, entry + 1);
             } else {
-                b.push([id, 1]);
+                b.set(id, 1);
             }
-        })
+        }),
+        clear: () => mutate(basket, b => b.clear())
     };
 }
