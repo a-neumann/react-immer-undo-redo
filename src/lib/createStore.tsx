@@ -91,7 +91,7 @@ export default function createStore<S extends object>(initial: S) {
 
         const setValue = (next: S) => {
             annotateWithPaths(next);
-            _setValue(next);
+            _setValue({ ...next });
         };
 
         const handlePatches = useCallback((patches: Patch[], inversePatches: Patch[]) => {
