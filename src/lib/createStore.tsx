@@ -101,6 +101,8 @@ export default function createStore<S extends object>(initial: S, options: { cla
 
         const handlePatches = useCallback((patches: Patch[], inversePatches: Patch[]) => {
 
+            if (!patches.length && !inversePatches.length) return;
+
             patchesRef.current.push(patches);
             inversePatchesRef.current.push(inversePatches);
 
