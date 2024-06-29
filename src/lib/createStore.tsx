@@ -1,6 +1,16 @@
 import { Patch, applyPatches, createDraft, finishDraft, produce } from "immer";
 import React, { createContext, useCallback, useContext, useMemo, useRef, useState } from "react";
 import annotateWithPaths, { getByPath, getPath } from "./annotateWithPaths";
+import wrapClassInstances from "./wrapClassInstances";
+
+export interface IMutateContext<S> {
+    mutate: (fn: (draft: S) => void) => void,
+    mutateAsync: (fn: (draft: S, abort: AbortHandle) => Promise<void>) => Promise<boolean>,
+    undo: () => void,
+    redo: () => void,
+    on: (event: ContextEvent, fn: () => unknown) => void;
+    off: (event: ContextEvent, fn: () => unknown) => void;
+}
 
 class AbortHandle {
 
@@ -57,16 +67,7 @@ class MutateEvent extends Event {
 
 export type ContextEvent = "history" | "mutate";
 
-interface IMutateContext<S> {
-    mutate: (fn: (draft: S) => void) => void,
-    mutateAsync: (fn: (draft: S, abort: AbortHandle) => Promise<void>) => Promise<boolean>,
-    undo: () => void,
-    redo: () => void,
-    on: (event: ContextEvent, fn: () => unknown) => void;
-    off: (event: ContextEvent, fn: () => unknown) => void;
-}
-
-export default function createStore<S extends object>(initial: S) {
+export default function createStore<S extends object>(initial: S, options: { classes?: boolean } = {}) {
 
     const noop = () => { };
 
@@ -82,7 +83,10 @@ export default function createStore<S extends object>(initial: S) {
 
     const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 
+        const mutateContextRef = useRef<IMutateContext<S> | null>(null);
+
         annotateWithPaths(initial);
+        if (options.classes) wrapClassInstances(initial, () => mutateContextRef.current);
         const [value, _setValue] = useState(initial);
         const patchesRef = useRef<Patch[][]>([]);
         const inversePatchesRef = useRef<Patch[][]>([]);
@@ -91,6 +95,7 @@ export default function createStore<S extends object>(initial: S) {
 
         const setValue = (next: S) => {
             annotateWithPaths(next);
+            if (options.classes) wrapClassInstances(next, () => mutateContextRef.current);
             _setValue({ ...next });
         };
 
@@ -106,16 +111,16 @@ export default function createStore<S extends object>(initial: S) {
             }
         }, []);
 
-        const setContextValue = useMemo(() => ({
+        const mutateContextValue = useMemo(() => ({
             mutate: (fn: (draft: S) => void) => {
                 const nextState = produce(value, d => { fn(d as S); }, handlePatches);
                 setValue(nextState);
 
-                eventTargetRef.current.dispatchEvent(new MutateEvent({ offset: undoOffsetRef.current, async: false}));
+                eventTargetRef.current.dispatchEvent(new MutateEvent({ offset: undoOffsetRef.current, async: false }));
             },
             mutateAsync: async (fn: (draft: S, abort: AbortHandle) => Promise<void>) => {
                 const draft = createDraft(value);
-                const abortHandle = new AbortHandle(setContextValue);
+                const abortHandle = new AbortHandle(mutateContextValue);
                 await fn(draft as S, abortHandle).finally(() => abortHandle.dispose());
 
                 if (!abortHandle.aborted) {
@@ -157,9 +162,11 @@ export default function createStore<S extends object>(initial: S) {
             }
         }), [value]);
 
+        mutateContextRef.current = mutateContextValue;
+
         return (
             <StoreContext.Provider value={value}>
-                <MutateContext.Provider value={setContextValue}>
+                <MutateContext.Provider value={mutateContextValue}>
                     {children}
                 </MutateContext.Provider>
             </StoreContext.Provider>
@@ -180,19 +187,19 @@ export default function createStore<S extends object>(initial: S) {
     function useMutate() {
 
         const context = useContext(MutateContext);
-    
+
         return <T extends object>(o: T, fn: (o: T) => void) => {
-    
+
             const path = getPath(o);
-    
+
             if (path) {
                 context.mutate(d => {
-    
-                    const itemInDraft = getByPath(d, path);    
+
+                    const itemInDraft = getByPath(d, path);
                     fn(itemInDraft);
-    
+
                 });
-    
+
             } else {
                 console.warn("Not a tracked object.");
             }
@@ -202,17 +209,17 @@ export default function createStore<S extends object>(initial: S) {
     function useMutateAsync() {
 
         const context = useContext(MutateContext);
-    
+
         return <T extends object>(o: T, fn: (o: T, abort: AbortHandle) => Promise<void>) => {
-    
+
             const path = getPath(o);
-    
+
             if (path) {
                 return context.mutateAsync(async (d, a) => {
-                    const itemInDraft = getByPath(d, path);    
+                    const itemInDraft = getByPath(d, path);
                     return fn(itemInDraft, a);
                 });
-    
+
             } else {
                 console.warn("Not a tracked object.");
             }
