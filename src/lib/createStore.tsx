@@ -4,7 +4,7 @@ import annotateWithPaths, { getByPath, getPath } from "./annotateWithPaths";
 
 class AbortHandle {
 
-    context: IUpdateContext<any>;
+    context: IMutateContext<any>;
     aborted = false;
     onAbortFn?: () => unknown;
 
@@ -14,7 +14,7 @@ class AbortHandle {
         this.context.off("history", this.abort);
     }
 
-    constructor(context: IUpdateContext<any>) {
+    constructor(context: IMutateContext<any>) {
         this.context = context;
         this.context.on("history", this.abort);
     }
@@ -57,7 +57,7 @@ class MutateEvent extends Event {
 
 export type ContextEvent = "history" | "mutate";
 
-interface IUpdateContext<S> {
+interface IMutateContext<S> {
     mutate: (fn: (draft: S) => void) => void,
     mutateAsync: (fn: (draft: S, abort: AbortHandle) => Promise<void>) => Promise<boolean>,
     undo: () => void,
@@ -71,7 +71,7 @@ export default function createStore<S extends object>(initial: S) {
     const noop = () => { };
 
     const StoreContext = createContext<S>(initial);
-    const UpdateContext = createContext<IUpdateContext<S>>({
+    const MutateContext = createContext<IMutateContext<S>>({
         mutate: noop,
         mutateAsync: () => Promise.resolve(false),
         undo: noop,
@@ -159,9 +159,9 @@ export default function createStore<S extends object>(initial: S) {
 
         return (
             <StoreContext.Provider value={value}>
-                <UpdateContext.Provider value={setContextValue}>
+                <MutateContext.Provider value={setContextValue}>
                     {children}
-                </UpdateContext.Provider>
+                </MutateContext.Provider>
             </StoreContext.Provider>
         );
     };
@@ -173,13 +173,13 @@ export default function createStore<S extends object>(initial: S) {
 
     function useStoreHistory() {
 
-        const { undo, redo } = useContext(UpdateContext);
+        const { undo, redo } = useContext(MutateContext);
         return { undo, redo };
     }
 
     function useMutate() {
 
-        const context = useContext(UpdateContext);
+        const context = useContext(MutateContext);
     
         return <T extends object>(o: T, fn: (o: T) => void) => {
     
@@ -201,7 +201,7 @@ export default function createStore<S extends object>(initial: S) {
 
     function useMutateAsync() {
 
-        const context = useContext(UpdateContext);
+        const context = useContext(MutateContext);
     
         return <T extends object>(o: T, fn: (o: T, abort: AbortHandle) => Promise<void>) => {
     
