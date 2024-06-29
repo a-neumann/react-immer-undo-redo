@@ -2,6 +2,7 @@
     "compilerOptions": {
         "strict": true,
         "forceConsistentCasingInFileNames": true,
+        "target": "ES6",
         "lib": ["es2020", "dom"],
         "types": ["jest"],
         "jsx": "react",
