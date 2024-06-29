@@ -1,0 +1,40 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "start dev server",
+            "type": "npm",
+            "script": "start",
+            "isBackground": true,
+            "problemMatcher": {
+                "owner": "custom",
+                "pattern": [
+                    {
+                        "regexp": ".",
+                        "file": 1,
+                        "location": 2,
+                        "message": 3
+                    }
+                ],
+                "background": {
+                    "activeOnStart": true,
+                    "beginsPattern": ".*",
+                    "endsPattern": "^.*Server started.*$"
+                }
+            }
+        },
+        {
+            "label": "stop dev server",
+            "command": "echo ${input:stop_dev_server}",
+            "type": "shell"
+        }
+    ],
+    "inputs": [
+        {
+            "id": "stop_dev_server",
+            "type": "command",
+            "command": "workbench.action.tasks.terminate",
+            "args": "start dev server"
+        }
+    ]
+}
